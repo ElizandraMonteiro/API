@@ -97,7 +97,7 @@ class NotesController {
 
         });
 
-        return response.json({ notesWithTags });
+        return response.json(notesWithTags);
     }
 }
 
