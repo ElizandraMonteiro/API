@@ -1,11 +1,11 @@
 const knex = require("../database/knex");
 
-class NotesController {
+class MoviesController {
     async create(request, response) {
         const { title, description, tags, links } = request.body;
         const  user_id = request.user.id;
 
-        const [note_id] = await knex("notes").insert({
+        const [movie_id] = await knex("movies").insert({
             title,
             description,
             user_id
@@ -14,7 +14,7 @@ class NotesController {
         
         const tagsInsert = tags.map(name => {
             return {
-                note_id,
+                movie_id,
                 name,
                 user_id
             }
@@ -29,12 +29,12 @@ class NotesController {
     async show(request, response) {
         const { id } = request.params;
 
-        const note = await knex("notes").where({ id }).first();
-        const tags = await knex('tags').where({ note_id: id }).orderBy("name");
-        const links = await knex("links").where({ note_id: id }).orderBy("created_at");
+        const movie = await knex("movies").where({ id }).first();
+        const tags = await knex('tags').where({ movie_id: id }).orderBy("name");
+        const links = await knex("links").where({ movie_id: id }).orderBy("created_at");
 
         return response.json({
-            ...note,
+            ...movie,
             tags,
             links
         });
@@ -43,7 +43,7 @@ class NotesController {
     async delete(request, response) {
         const { id } = request.params;
 
-        await knex("notes").where({ id }).delete();
+        await knex("movies").where({ id }).delete();
 
         return response.json();
     }
@@ -53,44 +53,44 @@ class NotesController {
 
         const user_id = request.user.id;
 
-        let notes;
+        let movies;
 
         if (tags) {
             const filterTags = tags.split(',').map(tag => tag.trim());
 
-            notes = await knex("tags")
+            movies = await knex("tags")
                 .select([
-                    "notes.id",
-                    "notes.title",
-                    "notes.user_id",
+                    "movies.id",
+                    "movies.title",
+                    "movies.user_id",
                 ])
-                .where("notes.user_id", user_id)
-                .whereLike("notes.title", `%${title}%`)
+                .where("movies.user_id", user_id)
+                .whereLike("movies.title", `%${title}%`)
                 .whereIn("name", filterTags)
-                .innerJoin("notes", "notes.id", "tags.note_id")
-                .orderBy("notes.title")
+                .innerJoin("movies", "movies.id", "tags.movie_id")
+                .orderBy("movies.title")
 
         } else {
 
-            notes = await knex("notes")
+            movies = await knex("movies")
                 .where({ user_id })
                 .whereLike("title", `%${title}%`)
                 .orderBy("title");
         }
 
         const userTags = await knex("tags").where({ user_id });
-        const notesWithTags = notes.map(note => {
-            const noteTags = userTags.filter(tag => tag.note_id === note.id);
+        const moviesWithTags = movies.map(movie => {
+            const movieTags = userTags.filter(tag => tag.movie_id === movie.id);
 
             return {
-                ...note,
-                tags: noteTags
+                ...movie,
+                tags: movieTags
             }
 
         });
 
-        return response.json(notesWithTags);
+        return response.json(moviesWithTags);
     }
 }
 
-module.exports = NotesController;
+module.exports = MoviesController;
