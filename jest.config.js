@@ -3,7 +3,7 @@ module.exports = {
   coverageProvider: "v8",
 
   testMatch: [
-    "<rootDir>/src/**/*.sec.js"
+    "<rootDir>/src/**/*.spec.js"
   ],   
   
 }
